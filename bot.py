@@ -4,11 +4,17 @@ from datetime import datetime, timezone
 import requests
 
 
-def main():
-    token = os.environ["TELEGRAM_TOKEN"]
-    chat_id = os.environ["CHAT_ID"]
+def required_env(name):
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(f"A secret {name} não está configurada no GitHub Actions.")
+    return value
 
-    # Obter preço e variação da Solana
+
+def main():
+    token = required_env("TELEGRAM_TOKEN")
+    chat_id = required_env("CHAT_ID")
+
     response = requests.get(
         "https://api.coingecko.com/api/v3/simple/price",
         params={
@@ -34,7 +40,6 @@ def main():
         f"🕐 {agora}"
     )
 
-    # Enviar mensagem ao Telegram
     telegram_response = requests.post(
         f"https://api.telegram.org/bot{token}/sendMessage",
         json={
@@ -45,7 +50,14 @@ def main():
         timeout=20,
     )
     telegram_response.raise_for_status()
-    print("Mensagem enviada com sucesso!")
+
+    result = telegram_response.json()
+    if not result.get("ok"):
+        raise RuntimeError(
+            f"O Telegram recusou a mensagem: {result.get('description', 'erro desconhecido')}"
+        )
+
+    print(f"Mensagem enviada com sucesso para o chat {chat_id} às {agora}.")
 
 
 if __name__ == "__main__":
