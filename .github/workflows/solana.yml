@@ -1,10 +1,8 @@
-
 name: Solana Telegram Bot
 
 on:
   schedule:
-    - cron: '2-59/5 * * * *'
-      timezone: 'Europe/Lisbon'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
